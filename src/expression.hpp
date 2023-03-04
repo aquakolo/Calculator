@@ -11,7 +11,7 @@ class BinOp : public Expression {
     std::unique_ptr<Expression> e1, e2;
     char sign;
 public:
-    void addExp(Expression* exp1, Expression * exp2);
+    void addExp(std::unique_ptr<Expression> &exp1, std::unique_ptr<Expression> &exp2);
     std::string exp() override;
     double count() override;
 
@@ -21,7 +21,8 @@ public:
 class BracketExpression : public Expression{
     std::unique_ptr<Expression> e1;
 public:
-    explicit BracketExpression(Expression * e);
+    BracketExpression() = default;
+    void addExp(std::unique_ptr<Expression> &exp);
     std::string exp() override;
     double count() override;
 };

@@ -14,9 +14,9 @@ double Equation:: count(){
 class Iter{
 public:
     int priority;
-    std::list<Expression *>::iterator iterator;
+    std::list<std::unique_ptr<Expression>>::iterator iterator;
     int pos;
-    Iter(int p, std::list<Expression *>::iterator i, int po){
+    Iter(int p, std::_List_iterator<std::unique_ptr<Expression>> i, int po){
         priority = p;
         iterator = i;
         pos=po;
@@ -32,10 +32,10 @@ public:
     }
 };
 
-Expression * Equation::stringToExpression(const std::string& s){
+std::unique_ptr<Expression> Equation::stringToExpression(const std::string& s){
     std::priority_queue<Iter , std::vector<Iter>, compare >pqueue;
-    std::list<Expression *> listOfElements;
-    std::map<char, int> priority = {
+    std::list<std::unique_ptr<Expression>> listOfElements;
+    std::map<char, int> charToPriority = {
             {'+', 1},
             {'-', 1},
             {'*', 2},
@@ -44,41 +44,77 @@ Expression * Equation::stringToExpression(const std::string& s){
             {'^', 3},
             };
     std::string value;
-    for(size_t c=0; c<s.size();c++){
-        if(s[c] == '('){
-            size_t fin = s.find_first_of(s[c], c);
-            listOfElements.emplace_back(new BracketExpression(stringToExpression(s.substr(c+1, fin-c-1))));
-            c=fin;
+    int priority=0;
+    std::_List_iterator<std::unique_ptr<Expression>> li;
+
+    for(char c : s){
+
+        if(c!='.' && (c<'0' || c>'9') && !value.empty()){
+            listOfElements.emplace_back(std::make_unique<Value>(std::stod(value)));
+            value = "";
         }
-        else if(priority.find(s[c]) != priority.end()){
-            if(!value.empty()){
-                listOfElements.emplace_back(new Value(std::stod(value)));
-                value = "";
-            }
-            listOfElements.emplace_back(new BinOp(s[c]));
-            auto li = std::prev(listOfElements.end());
-            pqueue.emplace(priority[s[c]], li, c);
-        }
-        else if((s[c] >= '0' && s[c]<= '9') || s[c]=='.') {
-            value += s[c];
-        }
+
+        switch(c){
+            case '(':
+                priority+=10;
+                listOfElements.push_back(std::make_unique<BracketExpression>());
+                li = std::prev(listOfElements.end());
+                pqueue.emplace(priority, li, pqueue.size());
+                break;
+            case ')':
+                priority-=10;
+                break;
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+            case '%':
+            case '^':
+                listOfElements.push_back(std::make_unique<BinOp>(c));
+                li = std::prev(listOfElements.end());
+                pqueue.emplace(priority+charToPriority[c], li, pqueue.size());
+                break;
+            case '.':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                value += c;
+                break;
+            default:
+                break;
+        };
     }
     if(!value.empty()){
-        listOfElements.emplace_back(new Value(std::stod(value)));
+        listOfElements.emplace_back(std::make_unique<Value>(std::stod(value)));
         value = "";
     }
-    Expression * expression = listOfElements.front();
     while(!pqueue.empty()){
         auto top = pqueue.top();
         pqueue.pop();
-        expression = *top.iterator;
-        auto e = dynamic_cast<BinOp *>(expression);
-        auto p = *prev(top.iterator);
-        auto n = *next(top.iterator);
-        e->addExp(p, n);
+        if(top.priority%10!=0) {
+            reinterpret_cast<std::unique_ptr <BinOp> &&>(*top.iterator)->addExp(
+                    *prev(top.iterator),
+                    *next(top.iterator)
+                    );
+            listOfElements.erase(prev(top.iterator));
+            listOfElements.erase(next(top.iterator));
+        }
+        else{
+            reinterpret_cast<std::unique_ptr <BracketExpression> &&>(*top.iterator)->addExp(
+                    *next(top.iterator)
+            );
+            listOfElements.erase(next(top.iterator));
+        }
     }
 
-    return expression;
+    return std::move(listOfElements.front());
 }
 
 void operator>>(std::istream &s, Equation &e) {

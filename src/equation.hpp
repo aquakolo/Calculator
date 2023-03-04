@@ -7,7 +7,7 @@ class Equation{
 
 public:
 
-    static Expression * stringToExpression(const std::string& s);
+    static std::unique_ptr<Expression> stringToExpression(const std::string& s);
 
     Equation() = default;
 

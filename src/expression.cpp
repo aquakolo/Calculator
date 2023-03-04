@@ -25,9 +25,9 @@ BinOp::BinOp(char c) {
     this->sign = c;
 }
 
-void BinOp::addExp(Expression *exp1, Expression *exp2) {
-    this->e1 = std::unique_ptr<Expression>(exp1);
-    this->e2 = std::unique_ptr<Expression>(exp2);
+void BinOp::addExp(std::unique_ptr<Expression> &exp1, std::unique_ptr<Expression> &exp2) {
+    this->e1 = std::move(exp1);
+    this->e2 = std::move(exp2);
 }
 
 std::string BracketExpression::exp() {
@@ -38,8 +38,8 @@ double BracketExpression::count() {
     return this->e1->count();
 }
 
-BracketExpression::BracketExpression(Expression *e) {
-    this->e1 = std::unique_ptr<Expression>(e);
+void BracketExpression::addExp(std::unique_ptr<Expression> &exp){
+    this->e1 = std::move(exp);
 }
 
 std::string Value::exp() {
