@@ -1,20 +1,27 @@
+#include <memory>
 #include "expression.hpp"
 
 class Equation{
 
-    std::shared_ptr<Expession> expression;
-    static Expression * stringToExpresion(string s);
+    std::shared_ptr<Expression> expression;
 
 public:
 
+    static Expression * stringToExpression(const std::string& s);
+
     Equation() = default;
-    Equation(Expression * e);
+
+    explicit Equation(const std::shared_ptr<Expression> &expression);
+
     ~Equation() = default;
 
-    friend void operator>>(istream& s, Equation& e);
+    friend void operator>>(std::istream& s, Equation& e);
 
     double count();
-    std::shared_ptr<const Expression> structure();
-    string expression();
+    std::shared_ptr<Expression> structure() {
+        return expression;
+    }
 
-}
+    std::string toString();
+
+};
