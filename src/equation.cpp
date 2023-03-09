@@ -27,8 +27,8 @@ class compare{
 public:
     bool operator()(Iter a, Iter b){
         if(a.priority!=b.priority)
-            return a.priority > b.priority;
-        return a.pos <  b.pos;
+            return a.priority < b.priority;
+        return a.pos >  b.pos;
     }
 };
 
@@ -50,7 +50,7 @@ std::unique_ptr<Expression> Equation::stringToExpression(const std::string& s){
     for(char c : s){
 
         if(c!='.' && (c<'0' || c>'9') && !value.empty()){
-            listOfElements.emplace_back(std::make_unique<Value>(std::stod(value)));
+            listOfElements.push_back(std::make_unique<Value>(std::stod(value)));
             value = "";
         }
 
@@ -93,13 +93,12 @@ std::unique_ptr<Expression> Equation::stringToExpression(const std::string& s){
     }
     if(!value.empty()){
         listOfElements.emplace_back(std::make_unique<Value>(std::stod(value)));
-        value = "";
     }
     while(!pqueue.empty()){
         auto top = pqueue.top();
         pqueue.pop();
         if(top.priority%10!=0) {
-            reinterpret_cast<std::unique_ptr <BinOp> &&>(*top.iterator)->addExp(
+            reinterpret_cast<std::unique_ptr <BinOp> &>(*top.iterator)->addExp(
                     *prev(top.iterator),
                     *next(top.iterator)
                     );
@@ -107,7 +106,7 @@ std::unique_ptr<Expression> Equation::stringToExpression(const std::string& s){
             listOfElements.erase(next(top.iterator));
         }
         else{
-            reinterpret_cast<std::unique_ptr <BracketExpression> &&>(*top.iterator)->addExp(
+            reinterpret_cast<std::unique_ptr <BracketExpression> &>(*top.iterator)->addExp(
                     *next(top.iterator)
             );
             listOfElements.erase(next(top.iterator));
@@ -128,5 +127,4 @@ std::string Equation::toString() {
     return this->expression->exp();
 }
 
-Equation::Equation(const std::shared_ptr<Expression> &expression) : expression(expression) {}
 

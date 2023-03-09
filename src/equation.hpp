@@ -11,8 +11,6 @@ public:
 
     Equation() = default;
 
-    explicit Equation(const std::shared_ptr<Expression> &expression);
-
     ~Equation() = default;
 
     friend void operator>>(std::istream& s, Equation& e);
